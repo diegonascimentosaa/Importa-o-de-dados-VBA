@@ -1,0 +1,53 @@
+Sub ImportarArquivoCSV()
+    Dim wb As Workbook
+    Dim ws As Worksheet
+    Dim arquivoSelecionado As String
+    Dim rngDestino As Range
+    Dim cell As Range
+    
+    ' Selecionar arquivo CSV
+    arquivoSelecionado = Application.GetOpenFilename("Arquivos CSV (*.csv),*.csv", _
+        Title:="Selecionar arquivo")
+    
+    ' Verificar se um arquivo foi selecionado
+    If arquivoSelecionado <> "Falso" Then
+        ' Criar nova planilha para importar os dados
+        Set wb = ThisWorkbook
+        Set ws = wb.Sheets.Add(After:=wb.Sheets(wb.Sheets.Count))
+        
+        ' Definir o intervalo de destino para a importação
+        Set rngDestino = ws.Range("A1")
+        
+        ' Importar os dados do arquivo CSV
+        With ws.QueryTables.Add(Connection:="TEXT;" & arquivoSelecionado, _
+            Destination:=rngDestino)
+            .TextFileStartRow = 1
+            .TextFileParseType = xlDelimited
+            .TextFileOtherDelimiter = ";"
+            .TextFilePlatform = xlWindows
+            .TextFilePromptOnRefresh = False
+            .TextFileConsecutiveDelimiter = False
+            .TextFileTabDelimiter = False
+            .TextFileSemicolonDelimiter = False
+            .TextFileDecimalSeparator = ","
+            .TextFileThousandsSeparator = "."
+            .Refresh
+        End With
+        
+        ' Definir a primeira linha como cabeçalho
+        ws.Rows(1).Font.Bold = True
+        
+        ' Ajustar a largura das colunas para melhor visualização dos dados
+        ws.UsedRange.Columns.AutoFit
+        
+        ' Remover espaços em branco no começo e no fim do texto
+        For Each cell In rngDestino.CurrentRegion.Columns.SpecialCells(xlCellTypeConstants)
+            If VarType(cell.Value) = vbString Then
+                cell.Value = Trim(cell.Value)
+            End If
+        Next cell
+        
+        ' Exibir mensagem de conclusão
+        MsgBox "Dados importados com sucesso!"
+    End If
+End Sub
